@@ -1,0 +1,82 @@
+{
+  "name": "schema_data_loader",
+  "version": "0.0.1",
+  "packageManager": "yarn@3.4.1",
+  "scripts": {
+    "prepare": "husky install",
+    "build": "preconstruct build",
+    "watch": "preconstruct watch",
+    "lint": "eslint --fix --ext js,ts,tsx src",
+    "check-types": "tsc --project tsconfig.json",
+    "release": "commit-and-tag-version"
+  },
+  "dependencies": {
+    "lodash": "~4.17.21"
+  },
+  "peerDependencies": {
+    "class-transformer": "~0.5.1",
+    "reflect-metadata": "~0.1.13"
+  },
+  "files": [
+    "resolver",
+    "decorators",
+    "**/*.d.ts",
+    "dist"
+  ],
+  "devDependencies": {
+    "@babel/core": "~7.22.11",
+    "@babel/preset-typescript": "~7.22.11",
+    "@commitlint/cli": "~17.7.1",
+    "@commitlint/config-conventional": "~17.7.0",
+    "@commitlint/prompt-cli": "~17.7.1",
+    "@preconstruct/cli": "~2.8.1",
+    "@types/lodash": "~4.14.197",
+    "@types/node": "~20.5.7",
+    "@typescript-eslint/eslint-plugin": "~6.5.0",
+    "@typescript-eslint/parser": "~6.5.0",
+    "class-transformer": "~0.5.1",
+    "commit-and-tag-version": "~11.2.3",
+    "eslint": "~8.48.0",
+    "eslint-config-prettier": "~9.0.0",
+    "eslint-plugin-unused-imports": "~3.0.0",
+    "husky": "~8.0.3",
+    "inversify": "~6.0.1",
+    "lint-staged": "~14.0.1",
+    "prettier": "~3.0.3",
+    "reflect-metadata": "~0.1.13",
+    "typescript": "~5.2.2"
+  },
+  "preconstruct": {
+    "exports": {
+      "importConditionDefaultExport": "default"
+    },
+    "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
+      "importsConditions": true
+    },
+    "entrypoints": [
+      "./resolver.ts",
+      "./decorators.ts"
+    ]
+  },
+  "exports": {
+    "./resolver": {
+      "types": {
+        "import": "./resolver/dist/schema_data_loader-resolver.cjs.mjs",
+        "default": "./resolver/dist/schema_data_loader-resolver.cjs.js"
+      },
+      "module": "./resolver/dist/schema_data_loader-resolver.esm.js",
+      "import": "./resolver/dist/schema_data_loader-resolver.cjs.mjs",
+      "default": "./resolver/dist/schema_data_loader-resolver.cjs.js"
+    },
+    "./decorators": {
+      "types": {
+        "import": "./decorators/dist/schema_data_loader-decorators.cjs.mjs",
+        "default": "./decorators/dist/schema_data_loader-decorators.cjs.js"
+      },
+      "module": "./decorators/dist/schema_data_loader-decorators.esm.js",
+      "import": "./decorators/dist/schema_data_loader-decorators.cjs.mjs",
+      "default": "./decorators/dist/schema_data_loader-decorators.cjs.js"
+    },
+    "./package.json": "./package.json"
+  }
+}
