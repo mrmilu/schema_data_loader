@@ -23,39 +23,48 @@ interface ResolveEntitiesAndDataParams<T, C> {
   options?: ResolverGetOptions<C>;
 }
 
-interface ResolverConfig<C> {
+interface ResolverParams {
   subTypes: Array<ClassTransformerSubType> | undefined;
   type: ClassConstructor<unknown>;
   incomingPath: string;
   dataAccessorName: string | undefined;
-  options?: ResolverGetOptions<C>;
 }
 
 export class EntityResolverService implements IEntityResolverService {
-  private httpClient: IHttpClient;
-  private entityMap: Map<string, Entity> = new Map();
-  private promises: Array<Promise<void>> = [];
+  private readonly httpClient: IHttpClient;
 
   constructor(httpClient: IHttpClient) {
     this.httpClient = httpClient;
   }
 
   async get<T, C>(target: ClassConstructor<T>, data: object, options?: ResolverGetOptions<C>): Promise<T> {
-    await this.resolveEntitiesAndData<T, C>({ target, data, options, path: "" });
-    return plainToInstance(target, this.rebuildResolvedData(data) ?? {}, { excludeExtraneousValues: true });
+    const entityResolver = new EntityResolver<C>(this.httpClient, options);
+    const entityMap = await entityResolver.execute<T>({ target, data, options, path: "" });
+    return plainToInstance(target, this.rebuildResolvedData(entityMap, data) ?? {}, { excludeExtraneousValues: true });
   }
 
-  private rebuildResolvedData(data: object): object | null {
+  private rebuildResolvedData(entityMap: Map<string, Entity>, data: object): object | null {
     let rebuiltData: object | null = null;
-    for (const entity of this.entityMap.values()) {
+    for (const entity of entityMap.values()) {
       rebuiltData = set(data, entity.path, entity.resolvedData);
     }
     return rebuiltData;
   }
+}
 
-  private async resolveEntitiesAndData<T, C>({ path, data, options: getOptions, target }: ResolveEntitiesAndDataParams<T, C>): Promise<void> {
+class EntityResolver<C> {
+  private httpClient: IHttpClient;
+  private entityMap: Map<string, Entity> = new Map();
+  options?: ResolverGetOptions<C>;
+
+  constructor(httpClient: IHttpClient, options?: ResolverGetOptions<C>) {
+    this.options = options;
+    this.httpClient = httpClient;
+  }
+
+  async execute<T>({ path, data, target }: ResolveEntitiesAndDataParams<T, C>): Promise<Map<string, Entity>> {
     const targetEntities: Map<string, EntityDecoratorOptions> | undefined = Reflect.getMetadata(ENTITY_KEY, target);
-    if (!targetEntities) return;
+    if (!targetEntities) return this.entityMap;
     const targetExposedProps = defaultMetadataStorage.getExposedMetadatas(target);
     const exposedEntityProps = targetExposedProps.filter(({ propertyName }) => targetEntities.has(propertyName ?? ""));
     const incomingPath = `${path}${path?.length ? "." : ""}`;
@@ -66,10 +75,10 @@ export class EntityResolverService implements IEntityResolverService {
 
       const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
       if (entityDecoratorOptions?.conditionalResolver) {
-        const shouldResolve = entityDecoratorOptions.conditionalResolver(getOptions?.context ?? {});
+        const shouldResolve = entityDecoratorOptions.conditionalResolver(this.options?.context ?? {});
         if (!shouldResolve) {
           set(data, dataAccessorName, undefined);
-          return;
+          return this.entityMap;
         }
       }
 
@@ -77,40 +86,27 @@ export class EntityResolverService implements IEntityResolverService {
 
       if (propertyName) {
         const { options, reflectedType, typeFunction } = defaultMetadataStorage.findTypeMetadata(target, propertyName);
-        const type = typeFunction() as ClassConstructor<any>;
+        const type = typeFunction() as ClassConstructor<unknown>;
         const subTypes = options.discriminator?.subTypes;
 
+        const params: ResolverParams = {
+          subTypes,
+          type,
+          incomingPath,
+          dataAccessorName
+        };
+
         if (reflectedType.name === "Array" && Array.isArray(dataResource)) {
-          await this.arrayTypeResolver(
-            {
-              subTypes,
-              type,
-              incomingPath,
-              dataAccessorName,
-              options: getOptions
-            },
-            dataResource
-          );
+          await this.arrayTypeResolver(params, dataResource);
         } else if (reflectedType.name === "Object" && !Array.isArray(dataResource)) {
-          await this.objectTypeResolver(
-            {
-              subTypes,
-              type,
-              incomingPath,
-              dataAccessorName,
-              options: getOptions
-            },
-            dataResource
-          );
+          await this.objectTypeResolver(params, dataResource);
         }
       }
     }
+    return this.entityMap;
   }
 
-  private async objectTypeResolver<C>(
-    { incomingPath, type, subTypes, dataAccessorName, options }: ResolverConfig<C>,
-    dataResource: DataResourceEntity
-  ) {
+  private async objectTypeResolver({ incomingPath, type, subTypes, dataAccessorName }: ResolverParams, dataResource: DataResourceEntity) {
     const entity = new Entity({ type: dataResource.type, id: dataResource.id });
     entity.path = `${incomingPath}${dataAccessorName}`;
     entity.resolvedData = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
@@ -119,37 +115,33 @@ export class EntityResolverService implements IEntityResolverService {
     if (subTypes) {
       const correspondingSubType = subTypes.find((subType) => subType.name === entity.type);
       if (!correspondingSubType) throw new Error("Error retrieving subtype for object entity union");
-      await this.resolveEntitiesAndData({
+      await this.execute({
         target: correspondingSubType.value,
         data: entity.resolvedData,
         path: entity.path
       });
     } else {
-      await this.resolveEntitiesAndData({ target: type, data: entity.resolvedData, path: entity.path, options });
+      await this.execute({ target: type, data: entity.resolvedData, path: entity.path });
     }
   }
 
-  private async arrayTypeResolver<C>(
-    { dataAccessorName, type, subTypes, incomingPath, options }: ResolverConfig<C>,
-    dataResource: Array<DataResourceEntity>
-  ) {
+  private async arrayTypeResolver({ dataAccessorName, type, subTypes, incomingPath }: ResolverParams, dataResource: Array<DataResourceEntity>) {
     if (subTypes) {
       const orderedSubTypes = dataResource
         .map((resourceEntity) => subTypes.find((type) => type.name === resourceEntity.type)?.value)
         .filter(notEmpty);
-      await this.arrayEntityRequest(orderedSubTypes, dataResource, incomingPath, dataAccessorName, options);
+      await this.arrayEntityRequest(orderedSubTypes, dataResource, incomingPath, dataAccessorName);
     } else {
       const mappedTypes = dataResource.map(() => type);
-      await this.arrayEntityRequest(mappedTypes, dataResource, incomingPath, dataAccessorName, options);
+      await this.arrayEntityRequest(mappedTypes, dataResource, incomingPath, dataAccessorName);
     }
   }
 
-  private async arrayEntityRequest<C>(
+  private async arrayEntityRequest(
     typesList: Array<ClassConstructor<unknown>>,
     dataResourceList: Array<DataResourceEntity>,
     incomingPath: string,
-    dataAccessorName: string | undefined,
-    options?: ResolverGetOptions<C>
+    dataAccessorName: string | undefined
   ): Promise<void> {
     const resolveDataPromises: Array<Promise<{ type: ClassConstructor<unknown>; entity: Entity }>> = [];
     for (const [idx, type] of typesList.entries()) {
@@ -171,11 +163,10 @@ export class EntityResolverService implements IEntityResolverService {
     for (const { entity, type } of resolved) {
       if (!entity.resolvedData) throw new Error("Entity has no resolved data");
       concurrentPromises.push(
-        this.resolveEntitiesAndData({
+        this.execute({
           target: type,
           data: entity.resolvedData,
-          path: entity.path,
-          options
+          path: entity.path
         })
       );
     }
