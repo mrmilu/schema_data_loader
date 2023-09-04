@@ -4902,9 +4902,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"schema_data_loader@workspace:.":
+"schema-data-loader@workspace:.":
   version: 0.0.0-use.local
-  resolution: "schema_data_loader@workspace:."
+  resolution: "schema-data-loader@workspace:."
   dependencies:
     "@babel/core": ~7.22.11
     "@babel/preset-typescript": ~7.22.11

@@ -1,4 +1,4 @@
 {
-  "main": "dist/schema_data_loader-resolver.cjs.js",
-  "module": "dist/schema_data_loader-resolver.esm.js"
+  "main": "dist/schema-data-loader-resolver.cjs.js",
+  "module": "dist/schema-data-loader-resolver.esm.js"
 }

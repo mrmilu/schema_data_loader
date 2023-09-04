@@ -1,5 +1,5 @@
 {
-  "name": "schema_data_loader",
+  "name": "schema-data-loader",
   "version": "0.0.1",
   "packageManager": "yarn@3.4.1",
   "scripts": {
@@ -61,21 +61,21 @@
   "exports": {
     "./resolver": {
       "types": {
-        "import": "./resolver/dist/schema_data_loader-resolver.cjs.mjs",
-        "default": "./resolver/dist/schema_data_loader-resolver.cjs.js"
+        "import": "./resolver/dist/schema-data-loader-resolver.cjs.mjs",
+        "default": "./resolver/dist/schema-data-loader-resolver.cjs.js"
       },
-      "module": "./resolver/dist/schema_data_loader-resolver.esm.js",
-      "import": "./resolver/dist/schema_data_loader-resolver.cjs.mjs",
-      "default": "./resolver/dist/schema_data_loader-resolver.cjs.js"
+      "module": "./resolver/dist/schema-data-loader-resolver.esm.js",
+      "import": "./resolver/dist/schema-data-loader-resolver.cjs.mjs",
+      "default": "./resolver/dist/schema-data-loader-resolver.cjs.js"
     },
     "./decorators": {
       "types": {
-        "import": "./decorators/dist/schema_data_loader-decorators.cjs.mjs",
-        "default": "./decorators/dist/schema_data_loader-decorators.cjs.js"
+        "import": "./decorators/dist/schema-data-loader-decorators.cjs.mjs",
+        "default": "./decorators/dist/schema-data-loader-decorators.cjs.js"
       },
-      "module": "./decorators/dist/schema_data_loader-decorators.esm.js",
-      "import": "./decorators/dist/schema_data_loader-decorators.cjs.mjs",
-      "default": "./decorators/dist/schema_data_loader-decorators.cjs.js"
+      "module": "./decorators/dist/schema-data-loader-decorators.esm.js",
+      "import": "./decorators/dist/schema-data-loader-decorators.cjs.mjs",
+      "default": "./decorators/dist/schema-data-loader-decorators.cjs.js"
     },
     "./package.json": "./package.json"
   }
