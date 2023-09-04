@@ -1,10 +1,10 @@
 export class Entity<T = object> {
   type: string;
   id: string;
-  resolvedData?: T;
+  data?: T;
   path?: string;
 
-  constructor(params: Omit<Entity<T>, "path" | "resolvedData" | "entityTypeId" | "bundleId">) {
+  constructor(params: Omit<Entity<T>, "path" | "data" | "entityTypeId" | "bundleId">) {
     this.id = params.id;
     this.type = params.type;
   }

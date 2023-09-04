@@ -10,7 +10,7 @@
     "noEmit": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "moduleResolution": "Node16",
+    "moduleResolution": "node",
     "types": [
       "reflect-metadata",
       "node",

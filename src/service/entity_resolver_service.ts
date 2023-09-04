@@ -46,7 +46,7 @@ export class EntityResolverService implements IEntityResolverService {
   private rebuildResolvedData(entityMap: Map<string, Entity>, data: object): object | null {
     let rebuiltData: object | null = null;
     for (const entity of entityMap.values()) {
-      rebuiltData = set(data, entity.path, entity.resolvedData);
+      rebuiltData = set(data, entity.path, entity.data);
     }
     return rebuiltData;
   }
@@ -109,19 +109,19 @@ class EntityResolver<C> {
   private async objectTypeResolver({ incomingPath, type, subTypes, dataAccessorName }: ResolverParams, dataResource: DataResourceEntity) {
     const entity = new Entity({ type: dataResource.type, id: dataResource.id });
     entity.path = `${incomingPath}${dataAccessorName}`;
-    entity.resolvedData = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
+    entity.data = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
     this.entityMap.set(entity.path, entity);
-    if (!entity.resolvedData) throw new Error("Entity has no resolved data");
+    if (!entity.data) throw new Error("Entity has no resolved data");
     if (subTypes) {
       const correspondingSubType = subTypes.find((subType) => subType.name === entity.type);
       if (!correspondingSubType) throw new Error("Error retrieving subtype for object entity union");
       await this.execute({
         target: correspondingSubType.value,
-        data: entity.resolvedData,
+        data: entity.data,
         path: entity.path
       });
     } else {
-      await this.execute({ target: type, data: entity.resolvedData, path: entity.path });
+      await this.execute({ target: type, data: entity.data, path: entity.path });
     }
   }
 
@@ -153,19 +153,20 @@ class EntityResolver<C> {
         this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`).then((data) => {
           const retrievedEntity = this.entityMap.get(entity.path!);
           if (!retrievedEntity) throw new Error("Error retrieving entity");
-          retrievedEntity.resolvedData = data;
+          retrievedEntity.data = data;
           return { type, entity: retrievedEntity };
         })
       );
     }
-    const resolved = await Promise.all(resolveDataPromises);
+
+    const resolvedData = await Promise.all(resolveDataPromises);
     const concurrentPromises = [];
-    for (const { entity, type } of resolved) {
-      if (!entity.resolvedData) throw new Error("Entity has no resolved data");
+    for (const { entity, type } of resolvedData) {
+      if (!entity.data) throw new Error("Entity has no resolved data");
       concurrentPromises.push(
         this.execute({
           target: type,
-          data: entity.resolvedData,
+          data: entity.data,
           path: entity.path
         })
       );
