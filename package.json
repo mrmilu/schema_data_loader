@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "packageManager": "yarn@3.4.1",
   "scripts": {
-    "prepare": "husky install",
+    "husky-install": "husky install",
     "build": "preconstruct build",
     "watch": "preconstruct watch",
     "lint": "eslint --fix --ext js,ts,tsx src",
