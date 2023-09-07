@@ -1,0 +1,114 @@
+diff --git a/node_modules/@preconstruct/cli/cli/dist/preconstruct-cli-cli.cjs.js b/node_modules/@preconstruct/cli/cli/dist/preconstruct-cli-cli.cjs.js
+index b18c560..50c79a9 100644
+--- a/node_modules/@preconstruct/cli/cli/dist/preconstruct-cli-cli.cjs.js
++++ b/node_modules/@preconstruct/cli/cli/dist/preconstruct-cli-cli.cjs.js
+@@ -36,6 +36,7 @@ var codeFrame = require('@babel/code-frame');
+ var estreeWalker = require('estree-walker');
+ var isReference = require('is-reference');
+ var ms = require('ms');
++const exec = util.promisify(require('child_process').exec);
+ 
+ function _interopDefault (e) { return e && e.__esModule ? e : { 'default': e }; }
+ 
+@@ -3294,7 +3295,7 @@ function relativePath(id) {
+   return path__namespace["default"].relative(process.cwd(), id);
+ }
+ 
+-async function watchPackage(pkg) {
++async function watchPackage(pkg, onSuccessWatch) {
+   const _configs = getRollupConfigs(pkg);
+ 
+   let configs = _configs.map(config => {
+@@ -3312,7 +3313,7 @@ async function watchPackage(pkg) {
+   let startPromise = new Promise(resolve => {
+     startResolve = resolve;
+   });
+-  watcher.on("event", event => {
++  watcher.on("event", async event => {
+     // https://github.com/rollup/rollup/blob/aed954e4e6e8beabd47268916ff0955fbb20682d/bin/src/run/watch.ts#L71-L115
+     switch (event.code) {
+       case "ERROR":
+@@ -3341,6 +3342,22 @@ async function watchPackage(pkg) {
+       case "END":
+         {
+           info("waiting for changes...", pkg.name);
++          try {
++            let onSuccessCommand = onSuccessWatch
++            const hasPackageVar = onSuccessWatch.includes("%pkg%")
++            if (hasPackageVar) {
++              onSuccessCommand = onSuccessWatch.replace("%pkg%", pkg.name)
++            }
++
++            const {stdout, stderr} = await exec(onSuccessCommand);
++            if (stdout) info(stdout, pkg.name)
++            if (stderr) error(stderr, pkg.name)
++          } catch (e) {
++            error("error triggering onSuccess flag", pkg.name)
++            console.log(e)
++
++            process.exit(1)
++          }
+         }
+     }
+   });
+@@ -3350,12 +3367,12 @@ async function watchPackage(pkg) {
+   };
+ }
+ 
+-async function retryableWatch(pkg, getPromises, depth) {
++async function retryableWatch(pkg, getPromises, depth, onSuccessWatch) {
+   try {
+     let {
+       error,
+       start
+-    } = await watchPackage(pkg);
++    } = await watchPackage(pkg, onSuccessWatch);
+ 
+     if (depth === 0) {
+       getPromises({
+@@ -3367,7 +3384,7 @@ async function retryableWatch(pkg, getPromises, depth) {
+   } catch (err) {
+     if (err instanceof Promise) {
+       await err;
+-      await retryableWatch(pkg, getPromises, depth + 1);
++      await retryableWatch(pkg, getPromises, depth1, onSuccessWatch);
+       return;
+     }
+ 
+@@ -3375,7 +3392,7 @@ async function retryableWatch(pkg, getPromises, depth) {
+   }
+ }
+ 
+-async function build(directory) {
++async function build(directory, onSuccessWatch) {
+   createWorker();
+   let project = await Project.create(directory);
+   validateProject(project);
+@@ -3390,7 +3407,7 @@ async function build(directory) {
+     if (startCount === project.packages.length) {
+       success(successes.startedWatching);
+     }
+-  }, 0)));
++  }, 0, onSuccessWatch)));
+ }
+ 
+ let keys = Object.keys;
+@@ -3476,7 +3493,8 @@ async function fix(directory) {
+ 
+ process.env.NODE_ENV = "production";
+ let {
+-  input
++  input,
++  flags
+ } = meow__default["default"](`
+ Usage
+   $ preconstruct [command]
+@@ -3518,7 +3536,7 @@ class CommandNotFoundError extends Error {}
+ 
+       case "watch":
+         {
+-          await build(process.cwd());
++          await build(process.cwd(), flags.onSuccess);
+           return;
+         }
+ 

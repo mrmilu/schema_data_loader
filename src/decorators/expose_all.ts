@@ -1,5 +1,5 @@
 import { defaultMetadataStorage } from "class-transformer/cjs/storage.js";
-import { ExposeOptions } from "class-transformer";
+import type { ExposeOptions } from "class-transformer";
 
 const camelCase = require("lodash/camelCase");
 const snakeCase = require("lodash/snakeCase");
@@ -15,7 +15,7 @@ export function ExposeAll(options?: ExposeAllOptions) {
   const { nameCasing } = options || {};
   return function (target: any) {
     const object = new target();
-    Object.entries(object).forEach(([key, value]) => {
+    Object.entries(object).forEach(([key]) => {
       const exists = defaultMetadataStorage.findExposeMetadata(target, key);
       if (exists) return;
 

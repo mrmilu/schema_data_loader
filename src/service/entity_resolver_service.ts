@@ -16,20 +16,6 @@ function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
   return value !== null && value !== undefined;
 }
 
-interface ResolveEntitiesAndDataParams<T, C> {
-  target: ClassConstructor<T>;
-  data: object;
-  path?: string;
-  options?: ResolverGetOptions<C>;
-}
-
-interface ResolverParams {
-  subTypes: Array<ClassTransformerSubType> | undefined;
-  type: ClassConstructor<unknown>;
-  incomingPath: string;
-  dataAccessorName: string | undefined;
-}
-
 export class EntityResolverService implements IEntityResolverService {
   private readonly httpClient: IHttpClient;
 
@@ -50,6 +36,20 @@ export class EntityResolverService implements IEntityResolverService {
     }
     return rebuiltData;
   }
+}
+
+interface ResolveEntitiesAndDataParams<T, C> {
+  target: ClassConstructor<T>;
+  data: object;
+  path?: string;
+  options?: ResolverGetOptions<C>;
+}
+
+interface ResolverParams {
+  subTypes?: Array<ClassTransformerSubType>;
+  type: ClassConstructor<unknown>;
+  incomingPath: string;
+  dataAccessorName?: string;
 }
 
 class EntityResolver<C> {
@@ -73,16 +73,17 @@ class EntityResolver<C> {
       const dataAccessorName = options.name || propertyName;
       if (!dataAccessorName) throw new Error("No data accessor property. Not possible to read entities from resolved data");
 
+      const dataResource: Array<DataResourceEntity> | DataResourceEntity = get(data, dataAccessorName);
+
       const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
       if (entityDecoratorOptions?.conditionalResolver) {
-        const shouldResolve = entityDecoratorOptions.conditionalResolver(this.options?.context ?? {});
+        const _meta = Array.isArray(dataResource) ? dataResource.map((d) => d.meta) : dataResource.meta;
+        const shouldResolve = entityDecoratorOptions.conditionalResolver(this.options?.context ?? {}, _meta || {});
         if (!shouldResolve) {
           set(data, dataAccessorName, undefined);
-          return this.entityMap;
+          continue;
         }
       }
-
-      const dataResource: Array<DataResourceEntity> | DataResourceEntity = get(data, dataAccessorName);
 
       if (propertyName) {
         const { options, reflectedType, typeFunction } = defaultMetadataStorage.findTypeMetadata(target, propertyName);
