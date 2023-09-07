@@ -46,7 +46,7 @@ export class EntityResolverService implements IEntityResolverService {
   private rebuildResolvedData(entityMap: Map<string, Entity>, data: object): object | null {
     let rebuiltData: object | null = null;
     for (const entity of entityMap.values()) {
-      rebuiltData = set(data, entity.path, entity.data);
+      rebuiltData = set(data, entity.path, { ...entity.data, _meta: entity.meta });
     }
     return rebuiltData;
   }
@@ -107,7 +107,7 @@ class EntityResolver<C> {
   }
 
   private async objectTypeResolver({ incomingPath, type, subTypes, dataAccessorName }: ResolverParams, dataResource: DataResourceEntity) {
-    const entity = new Entity({ type: dataResource.type, id: dataResource.id });
+    const entity = this.createEntity(dataResource);
     entity.path = `${incomingPath}${dataAccessorName}`;
     entity.data = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
     this.entityMap.set(entity.path, entity);
@@ -146,7 +146,7 @@ class EntityResolver<C> {
     const resolveDataPromises: Array<Promise<{ type: ClassConstructor<unknown>; entity: Entity }>> = [];
     for (const [idx, type] of typesList.entries()) {
       const resourceEntity = dataResourceList[idx];
-      const entity = new Entity({ type: resourceEntity.type, id: resourceEntity.id });
+      const entity = this.createEntity(resourceEntity);
       entity.path = `${incomingPath}${dataAccessorName}[${idx}]`;
       this.entityMap.set(entity.path, entity);
       resolveDataPromises.push(
@@ -172,5 +172,9 @@ class EntityResolver<C> {
       );
     }
     await Promise.all(concurrentPromises);
+  }
+
+  private createEntity(dataResource: DataResourceEntity) {
+    return new Entity({ type: dataResource.type, id: dataResource.id, meta: dataResource.meta });
   }
 }

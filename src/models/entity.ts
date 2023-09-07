@@ -1,12 +1,14 @@
-export class Entity<T = object> {
+export class Entity<T = object, M = object> {
   type: string;
   id: string;
   data?: T;
   path?: string;
+  meta?: M;
 
-  constructor(params: Omit<Entity<T>, "path" | "data" | "entityTypeId" | "bundleId">) {
+  constructor(params: Omit<Entity<T, M>, "path" | "data" | "entityTypeId" | "bundleId">) {
     this.id = params.id;
     this.type = params.type;
+    this.meta = params.meta;
   }
 
   get entityTypeId() {
