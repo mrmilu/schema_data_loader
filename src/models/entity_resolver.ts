@@ -112,7 +112,9 @@ export class EntityResolver<C> {
     entity.path = `${incomingPath}${dataAccessorName}`;
     entity.data = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
     this.entityMap.set(entity.path, entity);
+
     if (!entity.data) throw new Error("Entity has no resolved data");
+
     if (subTypes) {
       const correspondingSubType = subTypes.find((subType) => subType.name === entity.type);
       if (!correspondingSubType) throw new Error("Error retrieving subtype for object entity union");
@@ -166,19 +168,21 @@ export class EntityResolver<C> {
   }: ArrayEntityRequestParams): Promise<void> {
     const resolveDataPromises: Array<Promise<{ type: ClassConstructor<unknown>; entity: Entity }>> = [];
     for (const [idx, type] of typesList.entries()) {
+      const resourceEntity = dataResourceList[idx];
+      const dataAccessor = `${dataAccessorName}[${idx}]`;
+
       const shouldResolve = await this.conditionalResolver({
         entityDecoratorOptions,
-        meta: dataResourceList[idx].meta,
+        meta: resourceEntity.meta,
         parentData: parentData,
-        dataAccessorName: `${dataAccessorName}[${idx}]`
+        dataAccessorName: dataAccessor
       });
-      if (!shouldResolve) {
-        continue;
-      }
-      const resourceEntity = dataResourceList[idx];
+      if (!shouldResolve) continue;
+
       const entity = this.createEntity(resourceEntity);
-      entity.path = `${incomingPath}${dataAccessorName}[${idx}]`;
+      entity.path = `${incomingPath}${dataAccessor}`;
       this.entityMap.set(entity.path, entity);
+
       resolveDataPromises.push(
         this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`).then((data) => {
           const retrievedEntity = this.entityMap.get(entity.path!);

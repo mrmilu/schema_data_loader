@@ -28,7 +28,7 @@ export function Union({ discriminatorProperty = "type", subTypes = [] }: UnionDe
       defaultMetadataStorage.addTransformMetadata({
         target: target.constructor,
         propertyName: propertyKey,
-        transformFn: ({ value }) => value.filter((v: unknown) => !(v instanceof UnionObject)),
+        transformFn: ({ value }) => value?.filter((v: unknown) => !(v instanceof UnionObject)),
         options: {}
       });
     }
