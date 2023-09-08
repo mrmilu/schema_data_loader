@@ -1,6 +1,6 @@
 export const ENTITY_KEY = Symbol("entity");
 
-type ConditionalResolverSignature<C, M> = (context: C, meta: M) => boolean;
+type ConditionalResolverSignature<C, M> = (context: C, meta: M, idx?: number) => boolean;
 
 export interface EntityDecoratorOptions<C = object | Array<object>, M = object> {
   conditionalResolver: ConditionalResolverSignature<C, M>;

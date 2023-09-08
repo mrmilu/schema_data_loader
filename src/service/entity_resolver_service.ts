@@ -8,13 +8,10 @@ import { defaultMetadataStorage } from "class-transformer/cjs/storage.js";
 import type { EntityDecoratorOptions } from "../decorators/entity";
 import { ENTITY_KEY } from "../decorators/entity";
 import type { DataResourceEntity } from "../interfaces/data_resource_entity";
+import { notEmpty } from "../utils/array";
 
 const get = require("lodash/get");
 const set = require("lodash/set");
-
-function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
-  return value !== null && value !== undefined;
-}
 
 export class EntityResolverService implements IEntityResolverService {
   private readonly httpClient: IHttpClient;
@@ -49,7 +46,23 @@ interface ResolverParams {
   subTypes?: Array<ClassTransformerSubType>;
   type: ClassConstructor<unknown>;
   incomingPath: string;
-  dataAccessorName?: string;
+  dataAccessorName: string;
+}
+
+interface ConditionalResolverParams {
+  entityDecoratorOptions?: EntityDecoratorOptions;
+  meta: object;
+  parentData: object;
+  dataAccessorName: string;
+}
+
+interface ArrayEntityRequestParams {
+  typesList: Array<ClassConstructor<unknown>>;
+  dataResourceList: Array<DataResourceEntity>;
+  incomingPath: string;
+  dataAccessorName: string;
+  entityDecoratorOptions?: EntityDecoratorOptions;
+  parentData: object;
 }
 
 class EntityResolver<C> {
@@ -75,21 +88,12 @@ class EntityResolver<C> {
 
       const dataResource: Array<DataResourceEntity> | DataResourceEntity = get(data, dataAccessorName);
 
-      const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
-      if (entityDecoratorOptions?.conditionalResolver) {
-        const _meta = Array.isArray(dataResource) ? dataResource.map((d) => d.meta) : dataResource.meta;
-        const shouldResolve = entityDecoratorOptions.conditionalResolver(this.options?.context ?? {}, _meta || {});
-        if (!shouldResolve) {
-          set(data, dataAccessorName, undefined);
-          continue;
-        }
-      }
-
       if (propertyName) {
         const { options, reflectedType, typeFunction } = defaultMetadataStorage.findTypeMetadata(target, propertyName);
         const type = typeFunction() as ClassConstructor<unknown>;
         const subTypes = options.discriminator?.subTypes;
 
+        const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
         const params: ResolverParams = {
           subTypes,
           type,
@@ -98,13 +102,33 @@ class EntityResolver<C> {
         };
 
         if (reflectedType.name === "Array" && Array.isArray(dataResource)) {
-          await this.arrayTypeResolver(params, dataResource);
+          await this.arrayTypeResolver(params, dataResource, data, entityDecoratorOptions);
         } else if (reflectedType.name === "Object" && !Array.isArray(dataResource)) {
+          const shouldResolve = await this.conditionalResolver({
+            entityDecoratorOptions,
+            meta: dataResource.meta,
+            parentData: data,
+            dataAccessorName
+          });
+          if (!shouldResolve) continue;
           await this.objectTypeResolver(params, dataResource);
         }
       }
     }
     return this.entityMap;
+  }
+
+  private async conditionalResolver({ entityDecoratorOptions, dataAccessorName, parentData, meta }: ConditionalResolverParams) {
+    if (entityDecoratorOptions?.conditionalResolver) {
+      const hasIndexMatch = dataAccessorName.match(/\[(.*?)]/);
+      const sanitizedMatch = hasIndexMatch?.[0].replace("[", "").replace("]", "");
+      const idx = sanitizedMatch ? parseInt(sanitizedMatch) : undefined;
+      const shouldResolve = entityDecoratorOptions.conditionalResolver(this.options?.context ?? {}, meta || {}, idx);
+      if (!shouldResolve) {
+        set(parentData, dataAccessorName, idx !== undefined ? {} : undefined);
+      }
+      return shouldResolve;
+    }
   }
 
   private async objectTypeResolver({ incomingPath, type, subTypes, dataAccessorName }: ResolverParams, dataResource: DataResourceEntity) {
@@ -126,26 +150,55 @@ class EntityResolver<C> {
     }
   }
 
-  private async arrayTypeResolver({ dataAccessorName, type, subTypes, incomingPath }: ResolverParams, dataResource: Array<DataResourceEntity>) {
+  private async arrayTypeResolver(
+    { dataAccessorName, type, subTypes, incomingPath }: ResolverParams,
+    dataResource: Array<DataResourceEntity>,
+    parentData: object,
+    entityDecoratorOptions?: EntityDecoratorOptions
+  ) {
+    const baseParams: Omit<ArrayEntityRequestParams, "typesList"> = {
+      dataResourceList: dataResource,
+      incomingPath,
+      dataAccessorName,
+      entityDecoratorOptions,
+      parentData
+    };
     if (subTypes) {
       const orderedSubTypes = dataResource
         .map((resourceEntity) => subTypes.find((type) => type.name === resourceEntity.type)?.value)
         .filter(notEmpty);
-      await this.arrayEntityRequest(orderedSubTypes, dataResource, incomingPath, dataAccessorName);
+      await this.arrayEntityRequest({
+        typesList: orderedSubTypes,
+        ...baseParams
+      });
     } else {
       const mappedTypes = dataResource.map(() => type);
-      await this.arrayEntityRequest(mappedTypes, dataResource, incomingPath, dataAccessorName);
+      await this.arrayEntityRequest({
+        typesList: mappedTypes,
+        ...baseParams
+      });
     }
   }
 
-  private async arrayEntityRequest(
-    typesList: Array<ClassConstructor<unknown>>,
-    dataResourceList: Array<DataResourceEntity>,
-    incomingPath: string,
-    dataAccessorName: string | undefined
-  ): Promise<void> {
+  private async arrayEntityRequest({
+    typesList,
+    dataResourceList,
+    incomingPath,
+    dataAccessorName,
+    entityDecoratorOptions,
+    parentData
+  }: ArrayEntityRequestParams): Promise<void> {
     const resolveDataPromises: Array<Promise<{ type: ClassConstructor<unknown>; entity: Entity }>> = [];
     for (const [idx, type] of typesList.entries()) {
+      const shouldResolve = await this.conditionalResolver({
+        entityDecoratorOptions,
+        meta: dataResourceList[idx].meta,
+        parentData: parentData,
+        dataAccessorName: `${dataAccessorName}[${idx}]`
+      });
+      if (!shouldResolve) {
+        continue;
+      }
       const resourceEntity = dataResourceList[idx];
       const entity = this.createEntity(resourceEntity);
       entity.path = `${incomingPath}${dataAccessorName}[${idx}]`;
@@ -161,8 +214,11 @@ class EntityResolver<C> {
     }
 
     const resolvedData = await Promise.all(resolveDataPromises);
+
     const concurrentPromises = [];
-    for (const { entity, type } of resolvedData) {
+    for (const item of resolvedData) {
+      if (!item) continue;
+      const { entity, type } = item;
       if (!entity.data) throw new Error("Entity has no resolved data");
       concurrentPromises.push(
         this.execute({

@@ -14,7 +14,7 @@ yarn add schema-data-loader class-transformer reflect-metadata
 First we should define our data schema that we will be fetching, more or
 less like GraphQL but with TypeScript classes.
 
-So let's imagine that for a given drupal json:api we will receive this response,
+So let's imagine that for a given drupal json:api server we will receive the following response;
 here we care about the `data` property object.
 
 ```json
@@ -77,11 +77,11 @@ here we care about the `data` property object.
 }
 ```
 
-From this data object you would like to retrieve the following properties: `title`,
+From this data object we would like to retrieve the following properties: `title`,
 `subtitle` and `foobar`. Two are `strings` and the last one it's, what we will call from now on,
 an **Entity**.
 
-If we would simple use `class-transformer` to map our ts class with the incoming
+If we would simple use `class-transformer` to map our TypeScript class with the incoming
 object from the data source we could easily map `title` and `subtitle` but no
 `foobar` because its data has to first be fetched.
 
@@ -116,9 +116,11 @@ it's able to assign the corresponding class type to the incoming entity data.
 Also, `schema-data-loader` uses this decorator too and its metadata, so it's **important**
 to always use it when dealing with custom types that are not primitive ones.
 
-Once we have our schema done we can retrieve the data using the `EntityResolverService`
-and passing as argument a http client that implements the interface
-`IHttpClient`. This snippet shows and example using axios, but you could use any
+Once we have our schema done we can retrieve the data using the `EntityResolverService`.
+The service constructor needs as argument a http client that implements the interface
+`IHttpClient`. 
+
+This snippet shows and example using axios, but you could use any
 http client you want.
 
 ```typescript
@@ -137,7 +139,7 @@ class HttpClient implements IHttpClient {
 }
 
 async function run() {
-  // Initial data it's a previously fetched data like the one in the previous json
+  // Initial data it's a previously fetched data like the one in the first json
   // and in general its data of node type, because in drupal it's a parent entity
   const intialData = {...}
   const httpClient = new HttpClient();
@@ -148,10 +150,10 @@ async function run() {
 ```
 
 ### Working with unions
-In some cases you would one property that can be from different kind of types,
+In some cases you can have a property that can be different kind of types,
 that's what's called [union types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#union-types)
 in TypeScript.
-As well as we have to decorate a nested object with the `@Type` decorator we should also do it
+Just like we have to decorate a nested object with the `@Type` decorator we should also do it
 for properties that are unions, either if they are entities or not.
 This package uses the `subTypes` metadata given by the `@Type` decorator
 to resolve possible entities of multiple types.
@@ -171,7 +173,8 @@ class Foo {
   foobar: FooBar;
   
   // The Union object it's a given util by this package that creates an empty
-  // object because we don't know which will be the default type in the incoming data
+  // object, so as we don't know which will be the default type in the incoming data
+  // we will use Union as default
   @Type(() => Union, {
     discriminator: {
       property: "type",
@@ -180,6 +183,13 @@ class Foo {
         { value: Baz, name: "paragraph--baz" },
       ]
     }
+  })
+  // class-transformer @Transform decorator here is useful to
+  // remove from the array objects that for some reason (we did not provide
+  // the a matching subtype or we did not resolve the entity) could not
+  // be transformed to a given type and so the Union abstract class was used
+  @Transform(({ value }) => {
+    return value.filter((v: unknown) => !(v instanceof Union));
   })
   @Entity()
   @Expose()
@@ -201,12 +211,58 @@ class Baz {
 }
 ```
 
-As you can see we are using the `type` property inside our entity
+As you can see we are using the `type` property that comes inside our entity json object
 as discriminator in the `@Type` decorator to distinguish which object will be which type.
-This applies too for union objects properties, you can find more info [here](https://github.com/typestack/class-transformer#providing-more-than-one-type-option).
 
->**Reminder:** `@Type` decorator its needed by both `class-transformer` and
+All of this applies for both array and object union properties, you can find more info [here](https://github.com/typestack/class-transformer#providing-more-than-one-type-option).
+
+>**Reminder:** `@Type` decorator it's needed by both `class-transformer` and
 > `schema-data-loader` so use it when working with Union or types that are not primitives.
+
+### @Union decorator
+Alternatively we added a new decorator to simplify the usage of unions and cleaning
+the array of union types from those who could not be associated to a given type.
+This decorator works also with objects.
+
+The previous example:
+
+```typescript
+class Foo {
+  @Type(() => Union, {
+    discriminator: {
+      property: "type",
+      subTypes: [
+        { value: BazBig, name: "paragraph--baz_big" },
+        { value: Baz, name: "paragraph--baz" },
+      ]
+    }
+  })
+  @Transform(({ value }) => {
+    return value.filter((v: unknown) => !(v instanceof Union));
+  })
+  @Entity()
+  @Expose()
+  baz: Array<BazBig | Baz>
+}
+```
+
+could be simplified with the `@Union` decorator exposed by `schema-data-loader`
+like so:
+
+```typescript
+class Foo {
+  @Union({
+    propertyDiscriminator: "type", // be default uses "type" if you don't assign it
+    subTypes: [
+      { value: BazBig, name: "paragraph--baz_big" },
+      { value: Baz, name: "paragraph--baz" },
+    ]
+  })
+  @Entity()
+  @Expose()
+  baz: Array<BazBig | Baz>
+}
+```
 
 ### Exposing properties and using different property names
 It's common that the consumer of the data might have objects with fewer properties 
@@ -218,11 +274,11 @@ to avoid exposing properties to the consumer that are not declared in their sche
 
 Because some objects are too big, having multiple `@Expose` decorators
 can be tedious, so in this package we created a decorator call `@ExposeAll`, which
-does the obvious. Exposes all properties in the ts class and also gives the property
+does the obvious. Exposes all properties in the ts class and also gives the class properties
 the opportunity to change their casing, for example to `snake_case` if the incoming data has the same name
 properties but with another casing.
 
-**BUT** there is a caveat, for this decorator to work each ts class property
+**BUT** there is a caveat, for this decorator to work each TypeScript class property
 **must have a default value** either `null` or from its corresponding type.
 
 Here is the previous example re-written with `@ExposeAll`:
@@ -237,14 +293,11 @@ class Foo {
   @Entity()
   foobar: FooBar = null;
   
-  @Type(() => Union, {
-    discriminator: {
-      property: "type",
-      subTypes: [
-        { value: BazBig, name: "paragraph--baz_big" },
-        { value: Baz, name: "paragraph--baz" },
-      ]
-    }
+  @Union({
+    subTypes: [
+      { value: BazBig, name: "paragraph--baz_big" },
+      { value: Baz, name: "paragraph--baz" },
+    ]
   })
   @Entity()
   baz: Array<BazBig | Baz> = []
@@ -263,4 +316,4 @@ class Baz {
 }
 ```
 
-As you can see it's much cleaner and easier to read. 
+As you can see its much cleaner and easier to read. 
