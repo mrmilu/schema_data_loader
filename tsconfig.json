@@ -20,7 +20,7 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "src",
+    "packages/core/src",
     "packages"
   ],
   "exclude": [

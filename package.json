@@ -5,26 +5,13 @@
   "scripts": {
     "husky-install": "husky install",
     "build": "preconstruct build",
-    "watch": "preconstruct watch --onSuccess='yalc push && yarn workspace %pkg% yalc-push'",
-    "lint": "eslint --fix --ext js,ts,tsx src",
+    "watch": "preconstruct watch --onSuccess='yarn workspace %pkg% yalc-push'",
+    "lint": "eslint --fix --ext js,ts,tsx packages/core/src",
     "check-types": "tsc --project tsconfig.json",
     "release": "commit-and-tag-version"
   },
   "workspaces": [
     "packages/*"
-  ],
-  "dependencies": {
-    "lodash": "~4.17.21"
-  },
-  "peerDependencies": {
-    "class-transformer": "~0.5.1",
-    "reflect-metadata": "~0.1.13"
-  },
-  "files": [
-    "resolver",
-    "decorators",
-    "**/*.d.ts",
-    "dist"
   ],
   "devDependencies": {
     "@babel/core": "~7.22.17",
@@ -59,33 +46,8 @@
     "___experimentalFlags_WILL_CHANGE_IN_PATCH": {
       "importsConditions": true
     },
-    "entrypoints": [
-      "./resolver.ts",
-      "./decorators.ts"
-    ],
     "packages": [
       "packages/*"
     ]
-  },
-  "exports": {
-    "./resolver": {
-      "types": {
-        "import": "./resolver/dist/schema-data-loader-resolver.cjs.mjs",
-        "default": "./resolver/dist/schema-data-loader-resolver.cjs.js"
-      },
-      "module": "./resolver/dist/schema-data-loader-resolver.esm.js",
-      "import": "./resolver/dist/schema-data-loader-resolver.cjs.mjs",
-      "default": "./resolver/dist/schema-data-loader-resolver.cjs.js"
-    },
-    "./decorators": {
-      "types": {
-        "import": "./decorators/dist/schema-data-loader-decorators.cjs.mjs",
-        "default": "./decorators/dist/schema-data-loader-decorators.cjs.js"
-      },
-      "module": "./decorators/dist/schema-data-loader-decorators.esm.js",
-      "import": "./decorators/dist/schema-data-loader-decorators.cjs.mjs",
-      "default": "./decorators/dist/schema-data-loader-decorators.cjs.js"
-    },
-    "./package.json": "./package.json"
   }
 }

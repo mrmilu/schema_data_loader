@@ -1,0 +1,4 @@
+{
+  "main": "dist/schema-data-loader-core-decorators.cjs.js",
+  "module": "dist/schema-data-loader-core-decorators.esm.js"
+}

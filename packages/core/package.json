@@ -1,0 +1,50 @@
+{
+  "name": "@schema-data-loader/core",
+  "version": "0.0.1",
+  "exports": {
+    "./resolver": {
+      "types": {
+        "import": "./resolver/dist/schema-data-loader-core-resolver.cjs.mjs",
+        "default": "./resolver/dist/schema-data-loader-core-resolver.cjs.js"
+      },
+      "module": "./resolver/dist/schema-data-loader-core-resolver.esm.js",
+      "import": "./resolver/dist/schema-data-loader-core-resolver.cjs.mjs",
+      "default": "./resolver/dist/schema-data-loader-core-resolver.cjs.js"
+    },
+    "./decorators": {
+      "types": {
+        "import": "./decorators/dist/schema-data-loader-core-decorators.cjs.mjs",
+        "default": "./decorators/dist/schema-data-loader-core-decorators.cjs.js"
+      },
+      "module": "./decorators/dist/schema-data-loader-core-decorators.esm.js",
+      "import": "./decorators/dist/schema-data-loader-core-decorators.cjs.mjs",
+      "default": "./decorators/dist/schema-data-loader-core-decorators.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": "Mr.Milú",
+  "license": "MIT",
+  "sideEffects": false,
+  "scripts": {
+    "yalc-push": "yalc push --private"
+  },
+  "dependencies": {
+    "lodash": "~4.17.21"
+  },
+  "peerDependencies": {
+    "class-transformer": "~0.5.1",
+    "reflect-metadata": "~0.1.13"
+  },
+  "files": [
+    "resolver",
+    "decorators",
+    "**/*.d.ts",
+    "dist"
+  ],
+  "preconstruct": {
+    "entrypoints": [
+      "./resolver.ts",
+      "./decorators.ts"
+    ]
+  }
+}

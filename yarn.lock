@@ -1177,6 +1177,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@schema-data-loader/core@workspace:packages/core":
+  version: 0.0.0-use.local
+  resolution: "@schema-data-loader/core@workspace:packages/core"
+  dependencies:
+    lodash: ~4.17.21
+  peerDependencies:
+    class-transformer: ~0.5.1
+    reflect-metadata: ~0.1.13
+  languageName: unknown
+  linkType: soft
+
 "@schema-data-loader/eslint-plugin@workspace:packages/linter":
   version: 0.0.0-use.local
   resolution: "@schema-data-loader/eslint-plugin@workspace:packages/linter"
@@ -5270,14 +5281,10 @@ __metadata:
     husky: ~8.0.3
     inversify: ~6.0.1
     lint-staged: ~14.0.1
-    lodash: ~4.17.21
     patch-package: ~8.0.0
     prettier: ~3.0.3
     reflect-metadata: ~0.1.13
     typescript: ~5.2.2
-  peerDependencies:
-    class-transformer: ~0.5.1
-    reflect-metadata: ~0.1.13
   languageName: unknown
   linkType: soft
 

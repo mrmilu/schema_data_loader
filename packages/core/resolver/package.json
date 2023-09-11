@@ -1,0 +1,4 @@
+{
+  "main": "dist/schema-data-loader-core-resolver.cjs.js",
+  "module": "dist/schema-data-loader-core-resolver.esm.js"
+}

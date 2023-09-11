@@ -92,12 +92,16 @@ and then transform it to the corresponding class type.
 So the TypeScript schema class would look something like this:
 
 ```typescript
+import { Entity } from "@schema-data-loader/core/decorators";
+import { Expose, Type } from "class-transformer";
+
 class Foo {
   @Expose()
   title!: string;
   @Expose()
   subtitle!: string;
   
+  @Expose()
   @Type(() => FooBar)
   @Entity()
   foobar: FooBar;
@@ -124,6 +128,8 @@ This snippet shows and example using axios, but you could use any
 http client you want.
 
 ```typescript
+import { EntityResolverService } from "@schema-data-loader/core/resolver";
+
 class HttpClient implements IHttpClient {
   private axios: AxiosInstance;
 
@@ -160,6 +166,10 @@ to resolve possible entities of multiple types.
 An example of working with unions can be shown with the previous json and the property `baz`.
 
 ```typescript
+import { Entity } from "@schema-data-loader/core/decorators";
+import { Union } from "@schema-data-loader/core/resolver";
+import { Expose, Type } from "class-transformer";
+
 // Following the previous schema we will add the baz property to it
 class Foo {
   @Expose()
@@ -227,6 +237,10 @@ This decorator works also with objects.
 The previous example:
 
 ```typescript
+import { Entity } from "@schema-data-loader/core/decorators";
+import { Union } from "@schema-data-loader/core/resolver";
+import { Expose, Type } from "class-transformer";
+
 class Foo {
   @Type(() => Union, {
     discriminator: {
@@ -250,6 +264,9 @@ could be simplified with the `@Union` decorator exposed by `schema-data-loader`
 like so:
 
 ```typescript
+import { Union, Entity } from "@schema-data-loader/core/decorators";
+import { Expose } from "class-transformer";
+
 class Foo {
   @Union({
     propertyDiscriminator: "type", // be default uses "type" if you don't assign it
@@ -284,6 +301,9 @@ properties but with another casing.
 Here is the previous example re-written with `@ExposeAll`:
 
 ```typescript
+import { Union, ExposeAll, Entity } from "@schema-data-loader/core/decorators";
+import { Type } from "class-transformer";
+
 @ExposeAll()
 class Foo {
   title = "";
@@ -316,4 +336,26 @@ class Baz {
 }
 ```
 
-As you can see its much cleaner and easier to read. 
+As you can see its much cleaner and easier to read.
+
+## ESLint plugin
+
+This package has some caveats that you might not catch at first like [when using @ExposeAll decorator](#exposing-properties-and-using-different-property-names).
+So to avoid pushing code that will not transpile we created some linter rules that will got you covered.
+
+### Install
+
+```shell
+yarn add @schema-data-loader/eslint-plugin
+```
+
+### Usage
+In your `.eslintrc.json` file or the type you prefer add the following.
+```json
+{
+  "plugins": ["@schema-data-loader"],
+  "extends": [
+    "plugin:@schema-data-loader/recommended"
+  ]
+}
+```
