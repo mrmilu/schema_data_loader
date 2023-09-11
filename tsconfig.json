@@ -10,16 +10,18 @@
     "noEmit": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "types": [
       "reflect-metadata",
       "node",
     ],
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true
   },
   "include": [
-    "src"
+    "src",
+    "packages"
   ],
   "exclude": [
     "node_modules",

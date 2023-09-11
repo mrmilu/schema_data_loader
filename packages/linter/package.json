@@ -1,0 +1,27 @@
+{
+  "name": "@schema-data-loader/eslint-plugin",
+  "version": "0.0.1",
+  "main": "dist/schema-data-loader-eslint-plugin.cjs.js",
+  "module": "dist/schema-data-loader-eslint-plugin.esm.js",
+  "exports": {
+    ".": {
+      "types": {
+        "import": "./dist/schema-data-loader-eslint-plugin.cjs.mjs",
+        "default": "./dist/schema-data-loader-eslint-plugin.cjs.js"
+      },
+      "module": "./dist/schema-data-loader-eslint-plugin.esm.js",
+      "import": "./dist/schema-data-loader-eslint-plugin.cjs.mjs",
+      "default": "./dist/schema-data-loader-eslint-plugin.cjs.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "author": "Mr.Milú",
+  "license": "MIT",
+  "sideEffects": false,
+  "scripts": {
+    "yalc-push": "yalc push --private"
+  },
+  "dependencies": {
+    "@typescript-eslint/utils": "6.6.0"
+  }
+}
