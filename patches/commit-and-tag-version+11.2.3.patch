@@ -1,0 +1,114 @@
+diff --git a/node_modules/commit-and-tag-version/index.js b/node_modules/commit-and-tag-version/index.js
+index 8941e65..5286607 100755
+--- a/node_modules/commit-and-tag-version/index.js
++++ b/node_modules/commit-and-tag-version/index.js
+@@ -82,6 +82,7 @@ module.exports = async function standardVersion (argv) {
+     }
+ 
+     const newVersion = await bump(args, version)
++    if(!newVersion) return;
+     await changelog(args, newVersion)
+     await commit(args, newVersion)
+     await tag(newVersion, pkg ? pkg.private : false, args)
+diff --git a/node_modules/commit-and-tag-version/lib/lifecycles/bump.js b/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
+index da72199..7d68878 100644
+--- a/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
++++ b/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
+@@ -8,23 +8,32 @@ const fs = require('fs')
+ const DotGitignore = require('dotgitignore')
+ const path = require('path')
+ const presetLoader = require('../preset-loader')
++const presetResolver = require('../preset-resolver')
+ const runLifecycleScript = require('../run-lifecycle-script')
+ const semver = require('semver')
+ const writeFile = require('../write-file')
+ const { resolveUpdaterObjectFromArgument } = require('../updaters')
++const conventionalChangelogPresetLoader = require('conventional-changelog-preset-loader')
+ let configsToUpdate = {}
+ 
+ async function Bump (args, version) {
+   // reset the cache of updated config files each
+   // time we perform the version bump step.
+   configsToUpdate = {}
+-
+   if (args.skip.bump) return version
+   let newVersion = version
+   await runLifecycleScript(args, 'prerelease')
+   const stdout = await runLifecycleScript(args, 'prebump')
+   if (stdout && stdout.trim().length) args.releaseAs = stdout.trim()
+   const release = await bumpVersion(args.releaseAs, version, args)
++  if(!Object.keys(release).length) {
++    checkpoint(
++      args,
++      'no commits found, so not bumping version',
++      []
++    )
++    return null;
++  }
+   if (!args.firstRelease) {
+     const releaseType = getReleaseType(args.prerelease, release.releaseType, version)
+     const releaseTypeAsVersion = releaseType === 'pre' + release.releaseType ? semver.valid(release.releaseType + '-' + args.prerelease + '.0') : semver.valid(releaseType)
+@@ -108,7 +117,7 @@ function getTypePriority (type) {
+ }
+ 
+ function bumpVersion (releaseAs, currentVersion, args) {
+-  return new Promise((resolve, reject) => {
++  return new Promise(async (resolve, reject) => {
+     if (releaseAs) {
+       return resolve({
+         releaseType: releaseAs
+@@ -118,12 +127,21 @@ function bumpVersion (releaseAs, currentVersion, args) {
+       if (typeof presetOptions === 'object') {
+         if (semver.lt(currentVersion, '1.0.0')) presetOptions.preMajor = true
+       }
++      const presetPackage = conventionalChangelogPresetLoader(presetOptions)
++      const config = await presetResolver(presetPackage)
++      const presetWhatBump = ((config.recommendedBumpOpts && config.recommendedBumpOpts.whatBump)
++        ? config.recommendedBumpOpts.whatBump
++        : noop)
+       conventionalRecommendedBump({
+         debug: args.verbose && console.info.bind(console, 'conventional-recommended-bump'),
+         preset: presetOptions,
+         path: args.path,
+         tagPrefix: args.tagPrefix,
+-        lernaPackage: args.lernaPackage
++        lernaPackage: args.lernaPackage,
++        whatBump(commits) {
++          if(!commits.length) return {}
++          return presetWhatBump(commits)
++        }
+       }, args.parserOpts, function (err, release) {
+         if (err) return reject(err)
+         else return resolve(release)
+@@ -173,4 +191,6 @@ function updateConfigs (args, newVersion) {
+   })
+ }
+ 
++function noop () {}
++
+ module.exports = Bump
+diff --git a/node_modules/commit-and-tag-version/lib/preset-resolver.js b/node_modules/commit-and-tag-version/lib/preset-resolver.js
+new file mode 100644
+index 0000000..31abcc2
+--- /dev/null
++++ b/node_modules/commit-and-tag-version/lib/preset-resolver.js
+@@ -0,0 +1,19 @@
++'use strict'
++
++const { promisify } = require('util')
++
++module.exports = presetResolver
++
++async function presetResolver (presetPackage) {
++  // handle traditional node-style callbacks
++  if (typeof presetPackage === 'function') {
++    return await promisify(presetPackage)()
++  }
++
++  // handle object literal or Promise instance
++  if (typeof presetPackage === 'object') {
++    return await presetPackage
++  }
++
++  throw new Error('preset package must be a promise, function, or object')
++}
