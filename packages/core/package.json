@@ -1,6 +1,6 @@
 {
   "name": "@schema-data-loader/core",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "exports": {
     "./resolver": {
       "types": {
