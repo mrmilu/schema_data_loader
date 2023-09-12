@@ -8,7 +8,7 @@
     "watch": "preconstruct watch --onSuccess='yarn workspace %pkg% yalc-push'",
     "lint": "eslint --fix --ext js,ts,tsx packages/core/src",
     "check-types": "tsc --project tsconfig.json",
-    "release": "yarn workspace release"
+    "release": "yarn workspaces foreach run release"
   },
   "workspaces": [
     "packages/*"
