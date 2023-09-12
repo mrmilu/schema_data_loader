@@ -29,7 +29,7 @@
     "@typescript-eslint/eslint-plugin": "~6.6.0",
     "@typescript-eslint/parser": "~6.6.0",
     "class-transformer": "~0.5.1",
-    "commit-and-tag-version": "file:../commit-and-tag-version",
+    "commit-and-tag-version": "~11.2.3",
     "eslint": "~8.49.0",
     "eslint-config-prettier": "~9.0.0",
     "eslint-plugin-unused-imports": "~3.0.0",
