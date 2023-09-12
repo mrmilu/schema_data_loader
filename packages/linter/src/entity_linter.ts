@@ -11,6 +11,7 @@ function nodeIsArray(node: TSESTree.PropertyDefinition): boolean {
     const _typeReference = typeReference as TSESTree.TSTypeReference;
     return (_typeReference.typeName as TSESTree.Identifier).name === "Array";
   }
+  // TEST
   return false;
 }
 
