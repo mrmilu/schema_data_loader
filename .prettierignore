@@ -3,3 +3,4 @@ dist
 .prettierignore
 *.json
 *.d.ts
+*.md
