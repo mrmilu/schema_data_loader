@@ -1,1 +1,5 @@
 dist
+.husky
+.prettierignore
+*.json
+*.d.ts

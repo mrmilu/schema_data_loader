@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 import { defaultMetadataStorage } from "class-transformer/cjs/storage.js";
 import type { ExposeOptions } from "class-transformer";
 
@@ -10,9 +11,9 @@ interface ExposeAllOptions {
   nameCasing?: ExposeAllCasing;
 }
 
-// TODO linter that when using decorator all properties must have a default value.
 export function ExposeAll(options?: ExposeAllOptions) {
   const { nameCasing } = options || {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return function (target: any) {
     const object = new target();
     Object.entries(object).forEach(([key]) => {
@@ -35,11 +36,5 @@ export function ExposeAll(options?: ExposeAllOptions) {
         options
       });
     });
-  };
-}
-
-export function Test() {
-  return function (target: any, propertyKey: string) {
-    // console.log("prop decorator", target.constructor);
   };
 }

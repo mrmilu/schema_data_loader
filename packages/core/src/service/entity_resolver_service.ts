@@ -6,7 +6,6 @@ import { plainToInstance } from "class-transformer";
 import type { IHttpClient } from "../interfaces/http_client";
 import { EntityResolver } from "../models/entity_resolver";
 
-const get = require("lodash/get");
 const set = require("lodash/set");
 
 export class EntityResolverService implements IEntityResolverService {

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "module": "commonjs",
+    "module": "nodenext",
     "allowJs": true,
     "strict": true,
     "noImplicitAny": true,
@@ -20,13 +20,11 @@
     "allowSyntheticDefaultImports": true
   },
   "include": [
-    "packages/core/src",
-    "packages"
+    "packages",
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "generator/dist",
     "*.cjs"
   ]
 }

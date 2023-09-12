@@ -25,7 +25,7 @@ interface ResolverParams {
 }
 
 interface ConditionalResolverParams {
-  entityDecoratorOptions?: EntityDecoratorOptions;
+  entityDecoratorOptions?: EntityDecoratorOptions<unknown>;
   meta: object;
   parentData: object;
   dataAccessorName: string;
@@ -36,7 +36,7 @@ interface ArrayEntityRequestParams {
   dataResourceList: Array<DataResourceEntity>;
   incomingPath: string;
   dataAccessorName: string;
-  entityDecoratorOptions?: EntityDecoratorOptions;
+  entityDecoratorOptions?: EntityDecoratorOptions<unknown>;
   parentData: object;
 }
 
@@ -51,7 +51,7 @@ export class EntityResolver<C> {
   }
 
   async execute<T>({ path, data, target }: ResolveEntitiesAndDataParams<T, C>): Promise<Map<string, Entity>> {
-    const targetEntities: Map<string, EntityDecoratorOptions> | undefined = Reflect.getMetadata(ENTITY_KEY, target);
+    const targetEntities: Map<string, EntityDecoratorOptions<unknown>> | undefined = Reflect.getMetadata(ENTITY_KEY, target);
     if (!targetEntities) return this.entityMap;
     const targetExposedProps = defaultMetadataStorage.getExposedMetadatas(target);
     const exposedEntityProps = targetExposedProps.filter(({ propertyName }) => targetEntities.has(propertyName ?? ""));
@@ -132,7 +132,7 @@ export class EntityResolver<C> {
     { dataAccessorName, type, subTypes, incomingPath }: ResolverParams,
     dataResource: Array<DataResourceEntity>,
     parentData: object,
-    entityDecoratorOptions?: EntityDecoratorOptions
+    entityDecoratorOptions?: EntityDecoratorOptions<unknown>
   ) {
     const baseParams: Omit<ArrayEntityRequestParams, "typesList"> = {
       dataResourceList: dataResource,
