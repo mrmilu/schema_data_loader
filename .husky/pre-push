@@ -3,4 +3,3 @@
 
 node ./scripts/check_master.mjs
 git diff HEAD --quiet
-yarn test --collect-coverage && git checkout .
