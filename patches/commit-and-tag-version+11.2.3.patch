@@ -11,10 +11,10 @@ index 8941e65..5286607 100755
      await commit(args, newVersion)
      await tag(newVersion, pkg ? pkg.private : false, args)
 diff --git a/node_modules/commit-and-tag-version/lib/lifecycles/bump.js b/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
-index da72199..1d0e501 100644
+index da72199..3122da3 100644
 --- a/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
 +++ b/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
-@@ -12,19 +12,59 @@ const runLifecycleScript = require('../run-lifecycle-script')
+@@ -12,19 +12,64 @@ const runLifecycleScript = require('../run-lifecycle-script')
  const semver = require('semver')
  const writeFile = require('../write-file')
  const { resolveUpdaterObjectFromArgument } = require('../updaters')
@@ -25,6 +25,7 @@ index da72199..1d0e501 100644
 +  let level = 2
 +  let breakings = 0
 +  let features = 0
++  let fix = 0
 +
 +  commits.forEach(commit => {
 +    addBangNotes(commit)
@@ -37,16 +38,19 @@ index da72199..1d0e501 100644
 +        level = 1
 +      }
 +    }
++    if (commit.type === 'fix') {
++      fix += 1
++    }
 +  })
 +
 +  if (config.preMajor && level < 2) {
 +    level++
 +  }
 +
-+  if(!breakings && !features) return {}
++  if(!breakings && !features && !fix) return {}
 +
 +  return {
-+    level: level,
++    level,
 +    reason: breakings === 1
 +      ? `There is ${breakings} BREAKING CHANGE and ${features} features`
 +      : `There are ${breakings} BREAKING CHANGES and ${features} features`
@@ -64,6 +68,7 @@ index da72199..1d0e501 100644
    const stdout = await runLifecycleScript(args, 'prebump')
    if (stdout && stdout.trim().length) args.releaseAs = stdout.trim()
    const release = await bumpVersion(args.releaseAs, version, args)
++  console.log(release)
 +  if(!Object.keys(release).length) {
 +    checkpoint(
 +      args,
@@ -75,7 +80,7 @@ index da72199..1d0e501 100644
    if (!args.firstRelease) {
      const releaseType = getReleaseType(args.prerelease, release.releaseType, version)
      const releaseTypeAsVersion = releaseType === 'pre' + release.releaseType ? semver.valid(release.releaseType + '-' + args.prerelease + '.0') : semver.valid(releaseType)
-@@ -108,7 +148,7 @@ function getTypePriority (type) {
+@@ -108,7 +153,7 @@ function getTypePriority (type) {
  }
  
  function bumpVersion (releaseAs, currentVersion, args) {
@@ -84,7 +89,7 @@ index da72199..1d0e501 100644
      if (releaseAs) {
        return resolve({
          releaseType: releaseAs
-@@ -123,7 +163,8 @@ function bumpVersion (releaseAs, currentVersion, args) {
+@@ -123,7 +168,8 @@ function bumpVersion (releaseAs, currentVersion, args) {
          preset: presetOptions,
          path: args.path,
          tagPrefix: args.tagPrefix,
