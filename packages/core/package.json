@@ -26,7 +26,8 @@
   "license": "MIT",
   "sideEffects": false,
   "scripts": {
-    "yalc-push": "yalc push --private"
+    "yalc-push": "yalc push --private",
+    "release": "commit-and-tag-version"
   },
   "dependencies": {
     "lodash": "~4.17.21"

@@ -1,6 +1,6 @@
 {
   "name": "schema-data-loader",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "packageManager": "yarn@3.4.1",
   "scripts": {
     "husky-install": "husky install",
@@ -8,7 +8,7 @@
     "watch": "preconstruct watch --onSuccess='yarn workspace %pkg% yalc-push'",
     "lint": "eslint --fix --ext js,ts,tsx packages/core/src",
     "check-types": "tsc --project tsconfig.json",
-    "release": "commit-and-tag-version"
+    "release": "yarn workspace release"
   },
   "workspaces": [
     "packages/*"

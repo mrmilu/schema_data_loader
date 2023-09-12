@@ -1,3 +1,5 @@
 module.exports = {
-  releaseCommitMessageFormat: "chore(release): [skip ci] {{currentTag}}"
+  path: ".",
+  "tag-prefix": "linter",
+  releaseCommitMessageFormat: "chore(release): [skip ci] linter@{{currentTag}}"
 };
