@@ -1,6 +1,6 @@
 {
   "name": "@schema-data-loader/eslint-plugin",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "main": "dist/schema-data-loader-eslint-plugin.cjs.js",
   "module": "dist/schema-data-loader-eslint-plugin.esm.js",
   "exports": {
