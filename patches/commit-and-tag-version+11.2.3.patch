@@ -11,10 +11,10 @@ index 8941e65..5286607 100755
      await commit(args, newVersion)
      await tag(newVersion, pkg ? pkg.private : false, args)
 diff --git a/node_modules/commit-and-tag-version/lib/lifecycles/bump.js b/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
-index da72199..3122da3 100644
+index da72199..f5ff65f 100644
 --- a/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
 +++ b/node_modules/commit-and-tag-version/lib/lifecycles/bump.js
-@@ -12,19 +12,64 @@ const runLifecycleScript = require('../run-lifecycle-script')
+@@ -12,19 +12,63 @@ const runLifecycleScript = require('../run-lifecycle-script')
  const semver = require('semver')
  const writeFile = require('../write-file')
  const { resolveUpdaterObjectFromArgument } = require('../updaters')
@@ -68,7 +68,6 @@ index da72199..3122da3 100644
    const stdout = await runLifecycleScript(args, 'prebump')
    if (stdout && stdout.trim().length) args.releaseAs = stdout.trim()
    const release = await bumpVersion(args.releaseAs, version, args)
-+  console.log(release)
 +  if(!Object.keys(release).length) {
 +    checkpoint(
 +      args,
@@ -80,7 +79,7 @@ index da72199..3122da3 100644
    if (!args.firstRelease) {
      const releaseType = getReleaseType(args.prerelease, release.releaseType, version)
      const releaseTypeAsVersion = releaseType === 'pre' + release.releaseType ? semver.valid(release.releaseType + '-' + args.prerelease + '.0') : semver.valid(releaseType)
-@@ -108,7 +153,7 @@ function getTypePriority (type) {
+@@ -108,7 +152,7 @@ function getTypePriority (type) {
  }
  
  function bumpVersion (releaseAs, currentVersion, args) {
@@ -89,7 +88,7 @@ index da72199..3122da3 100644
      if (releaseAs) {
        return resolve({
          releaseType: releaseAs
-@@ -123,7 +168,8 @@ function bumpVersion (releaseAs, currentVersion, args) {
+@@ -123,7 +167,8 @@ function bumpVersion (releaseAs, currentVersion, args) {
          preset: presetOptions,
          path: args.path,
          tagPrefix: args.tagPrefix,
