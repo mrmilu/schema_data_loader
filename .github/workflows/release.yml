@@ -42,9 +42,14 @@ jobs:
         run: |
           echo "CORE_LAST_TAG=$(./package_version.sh --path=./packages/core)" >> $GITHUB_ENV
           echo "LINTER_LAST_TAG=$(./package_version.sh --path=./packages/linter)" >> $GITHUB_ENV
+
+      - name: echo test
+        run: |
           echo "${{ env.CORE_LAST_TAG }}"
           echo "${{ env.LINTER_LAST_TAG }}"
-
+          ./package_version.sh --path=./packages/linter
+          ./package_version.sh --path=./packages/core
+          
 #      - name: Publish Core
 #        uses: JS-DevTools/npm-publish@v1
 #        with:
