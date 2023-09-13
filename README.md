@@ -1,6 +1,15 @@
 # Schema data loader
 `schema-data-loader` lets you create object based requests for loading data from a drupal server with json:api enabled.
 
+- [Installation](#installation)
+- [Core package usage](#usage)
+  - [Working with unions](#working-with-unions)
+  - [@Union decorator](#union-decorator)
+  - [@Expose all decorator](#exposing-properties-and-using-different-property-names)
+- [ESLint Plugin](#eslint-plugin)
+  - [Install plugin](#install)
+  - [Use eslint-plugin](#usage-1)
+
 ## Installation
 
 This package uses as `peerDependency` both `class-transformer` and `reflect-metadata`, so you must have them installed.
