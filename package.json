@@ -2,6 +2,7 @@
   "name": "schema-data-loader",
   "version": "0.0.0",
   "packageManager": "yarn@3.4.1",
+  "private": true,
   "scripts": {
     "husky-install": "husky install",
     "build": "preconstruct build",

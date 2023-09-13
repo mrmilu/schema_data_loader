@@ -6,7 +6,7 @@ on:
     branches: [master]
 
 jobs:
-  release-and-docs:
+  release:
     runs-on: ubuntu-latest
 
     steps:
