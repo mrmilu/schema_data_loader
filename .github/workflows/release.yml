@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+jobs:
+  release-and-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BOT_ACCESS_TOKEN }}
+
+      - name: git config user
+        run: |
+          git config --global user.name mrm-dev
+          git config --global user.email dev@mrmilu.com
+
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v3.1.1
+        with:
+          node-version: "16"
+
+      - name: Setup yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@3.4.1 --activate
+
+      - name: Install dependencies
+        run: yarn
+
+      - name: Release
+        run: |
+          yarn release
+          git push --follow-tags origin master
+          yarn build
+
+      - name: Publish Core
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: "./packages/core/package.json"
+
+      - name: Publish Linter
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          package: "./packages/linter/package.json"
