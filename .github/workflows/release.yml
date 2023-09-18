@@ -42,17 +42,17 @@ jobs:
       - name: Set version tags
         run: |
           echo "CORE_LAST_TAG=core@v$(./package_version.sh --path=./packages/core)" >> $GITHUB_ENV
-          echo "LINTER_LAST_TAG=core@v$(./package_version.sh --path=./packages/linter)" >> $GITHUB_ENV
+          echo "LINTER_LAST_TAG=linter@v$(./package_version.sh --path=./packages/linter)" >> $GITHUB_ENV
 
       - name: Publish Core
-        uses: JS-DevTools/npm-publish@v1
+        uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{ secrets.NPM_TOKEN }}
           tag: ${{ env.CORE_LAST_TAG }}
           package: "./packages/core/package.json"
 
       - name: Publish Linter
-        uses: JS-DevTools/npm-publish@v1
+        uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{ secrets.NPM_TOKEN }}
           tag: ${{ env.LINTER_LAST_TAG }}
