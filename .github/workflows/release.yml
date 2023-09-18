@@ -36,26 +36,24 @@ jobs:
       - name: Release
         run: |
           yarn release
+          git push --follow-tags origin master --no-verify
           yarn build
 
       - name: Set version tags
         run: |
-          echo "CORE_LAST_TAG=$(./package_version.sh --path=./packages/core)" >> $GITHUB_ENV
-          echo "LINTER_LAST_TAG=$(./package_version.sh --path=./packages/linter)" >> $GITHUB_ENV
+          echo "CORE_LAST_TAG=core@v$(./package_version.sh --path=./packages/core)" >> $GITHUB_ENV
+          echo "LINTER_LAST_TAG=core@v$(./package_version.sh --path=./packages/linter)" >> $GITHUB_ENV
 
-      - name: test
-        run: echo ${{env.CORE_LAST_TAG}}
+      - name: Publish Core
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          tag: ${{ env.CORE_LAST_TAG }}
+          package: "./packages/core/package.json"
 
-#      - name: Publish Core
-#        uses: JS-DevTools/npm-publish@v1
-#        with:
-#          token: ${{ secrets.NPM_TOKEN }}
-#          tag: ${{ env.CORE_LAST_TAG }}
-#          package: "./packages/core/package.json"
-#
-#      - name: Publish Linter
-#        uses: JS-DevTools/npm-publish@v1
-#        with:
-#          token: ${{ secrets.NPM_TOKEN }}
-#          tag: ${{ env.LINTER_LAST_TAG }}
-#          package: "./packages/linter/package.json"
+      - name: Publish Linter
+        uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          tag: ${{ env.LINTER_LAST_TAG }}
+          package: "./packages/linter/package.json"
