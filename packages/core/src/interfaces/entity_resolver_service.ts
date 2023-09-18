@@ -1,7 +1,7 @@
 import type { ClassConstructor } from "class-transformer";
 
 export interface IEntityResolverService {
-  get<T, C>(entity: ClassConstructor<T>, data: Record<string, unknown>, options?: ResolverGetOptions<C>): void;
+  get<T, C>(target: ClassConstructor<T>, data: object, options?: ResolverGetOptions<C>): Promise<T>;
 }
 
 export interface ResolverGetOptions<C> {
