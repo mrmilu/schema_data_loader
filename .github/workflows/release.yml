@@ -36,7 +36,7 @@ jobs:
       - name: Release
         run: |
           yarn release
-          git push --follow-tags origin master
+          git push --follow-tags origin master --no-verify
           yarn build
 
       - name: Set version tags
