@@ -1,6 +1,6 @@
 {
   "name": "@schema-data-loader/core",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "repository": {
     "type": "git",
     "url": "https://github.com/mrmilu/schema_data_loader"

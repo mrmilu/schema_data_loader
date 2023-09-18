@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.4](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.3...core@v0.0.4) (2023-09-18)
+
+
+### Bug Fixes
+
+* **core:** added resolver get options interface export ([e8b46fe](https://github.com/mrmilu/schema_data_loader/commit/e8b46fef0ff2839a55cdfc5e6e01b3914bd10a1f))
+
 ## [0.0.3](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.2...core@v0.0.3) (2023-09-18)
 
 
