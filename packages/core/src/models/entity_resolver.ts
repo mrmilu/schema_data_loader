@@ -67,6 +67,7 @@ export class EntityResolver<C> {
         const { options, reflectedType, typeFunction } = defaultMetadataStorage.findTypeMetadata(target, propertyName);
         const type = typeFunction() as ClassConstructor<unknown>;
         const subTypes = options.discriminator?.subTypes;
+        let reflectTypeName = reflectedType?.name;
 
         const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
         const params: ResolverParams = {
@@ -76,9 +77,15 @@ export class EntityResolver<C> {
           dataAccessorName
         };
 
-        if (reflectedType.name === "Array" && Array.isArray(dataResource)) {
+        if (!reflectTypeName) {
+          reflectTypeName = typeFunction().constructor.name;
+        } else if (reflectTypeName !== "Object" && reflectTypeName !== "Array") {
+          reflectTypeName = reflectedType.constructor.name;
+        }
+
+        if (reflectTypeName === "Array" && Array.isArray(dataResource)) {
           await this.arrayTypeResolver(params, dataResource, data, entityDecoratorOptions);
-        } else if (reflectedType.name === "Object" && !Array.isArray(dataResource)) {
+        } else if ((reflectTypeName === "Object" || reflectTypeName === "Function") && !Array.isArray(dataResource)) {
           const shouldResolve = await this.conditionalResolver({
             entityDecoratorOptions,
             meta: dataResource.meta,
