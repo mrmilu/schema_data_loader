@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.0.5](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.4...core@v0.0.5) (2023-09-19)
+
+
+### Bug Fixes
+
+* **core:** get property type if reflection type is undefined or not Object or Array ([cdcb6a5](https://github.com/mrmilu/schema_data_loader/commit/cdcb6a5fe32578f17f7c9d988ca9b1fcdfcffac7))
+
 ## [0.0.4](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.3...core@v0.0.4) (2023-09-18)
 
 
