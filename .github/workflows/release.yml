@@ -48,12 +48,10 @@ jobs:
         uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{ secrets.NPM_TOKEN }}
-          tag: ${{ env.CORE_LAST_TAG }}
           package: "./packages/core/package.json"
 
       - name: Publish Linter
         uses: JS-DevTools/npm-publish@v2
         with:
           token: ${{ secrets.NPM_TOKEN }}
-          tag: ${{ env.LINTER_LAST_TAG }}
           package: "./packages/linter/package.json"

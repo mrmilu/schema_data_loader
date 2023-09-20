@@ -18,7 +18,11 @@ export class EntityResolverService implements IEntityResolverService {
   async get<T, C>(target: ClassConstructor<T>, data: object, options?: ResolverGetOptions<C>): Promise<T> {
     const entityResolver = new EntityResolver<C>(this.httpClient, options);
     const entityMap = await entityResolver.execute<T>({ target, data, options, path: "" });
-    return plainToInstance(target, this.rebuildResolvedData(entityMap, data) ?? {}, { excludeExtraneousValues: true });
+    const rebuiltData = this.rebuildResolvedData(entityMap, data) ?? {};
+    if (options?.raw) {
+      return rebuiltData as T;
+    }
+    return plainToInstance(target, rebuiltData, { excludeExtraneousValues: true });
   }
 
   private rebuildResolvedData(entityMap: Map<string, Entity>, data: object): object | null {

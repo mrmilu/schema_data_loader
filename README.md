@@ -368,3 +368,27 @@ In your `.eslintrc.json` file or the type you prefer add the following.
   ]
 }
 ```
+## Caveat
+Because this package uses under the hood internals of `class-transformer` that are not
+exposed as public APIs this package will only work with `cjs` builds. So if you are using Webpack
+and the bundler resolves `schema-data-loader` `esm` bundle, Webpack will also try to resolve
+`esm` bundle for `class-trasnformer`.
+
+To fix this, meanwhile we find a solution to solve internally, add the following aliases
+to your webpack config:
+
+```js
+/*This is a portion of a next.config.js file*/
+const path = require("path");
+module.exports = {
+  /*...*/
+  webpack(config) {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      "class-transformer/cjs/storage.js": path.resolve("./node_modules/class-transformer/cjs/storage.js"),
+      "class-transformer": path.resolve("./node_modules/class-transformer/cjs")
+    };
+    return config;
+  }
+}
+```
