@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.0](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.5...core@v0.1.0) (2023-09-20)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** added possibility to pass raw option to avoid transforming resolved data
+
+### Features
+
+* **core:** added possibility to pass raw option to avoid transforming resolved data ([de8c41a](https://github.com/mrmilu/schema_data_loader/commit/de8c41a6d4b92dc5b7498a4cc64c05829684c200))
+
 ## [0.0.5](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.4...core@v0.0.5) (2023-09-19)
 
 
