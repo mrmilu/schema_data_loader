@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.2.0](https://github.com/mrmilu/schema_data_loader/compare/core@v0.1.0...core@v0.2.0) (2023-10-18)
+
+
+### ⚠ BREAKING CHANGES
+
+* **core:** added HasEntity decorator to resolve nested entities that dont have a parent one
+
+### Features
+
+* **core:** added HasEntity decorator to resolve nested entities that dont have a parent one ([8b17492](https://github.com/mrmilu/schema_data_loader/commit/8b174925a37238f3cde16d14f635cb49d5819c93))
+
 ## [0.1.0](https://github.com/mrmilu/schema_data_loader/compare/core@v0.0.5...core@v0.1.0) (2023-09-20)
 
 
