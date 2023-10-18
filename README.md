@@ -3,6 +3,7 @@
 
 - [Installation](#installation)
 - [Core package usage](#usage)
+  -[Nested entities](#nested-entities) 
   - [Working with unions](#working-with-unions)
   - [@Union decorator](#union-decorator)
   - [@Expose all decorator](#exposing-properties-and-using-different-property-names)
@@ -161,6 +162,83 @@ async function run() {
   const resolverService = new EntityResolverService(httpClient);
   const foo = await resolverService.get(Foo, intialData);
   console.log(foo.foobar.description) // should log the correspidng value for it's nested entity
+}
+```
+
+### Nested entities
+
+By default, the package will detect nested entities, and it will retrieve all of them.
+
+```ts
+import { Entity } from "@schema-data-loader/core/decorators";
+import { Expose, Type } from "class-transformer";
+
+class Foo {
+  @Expose()
+  title!: string;
+  @Expose()
+  subtitle!: string;
+  
+  @Expose()
+  @Type(() => FooBar)
+  @Entity()
+  foobar: FooBar;
+}
+
+class FooBar {
+  @Expose()
+  description: string;
+  @Expose()
+  amount: number
+  @Expose()
+  @Type(() => Baz)
+  @Entity()
+  baz: Baz;
+}
+
+class Baz {
+  @Expose()
+  innerBaz: string;
+}
+```
+
+But the issue arises when we have nested entities that do not really in a previous entity. The package has no way of
+knowing that a nested object has an entity if the parent property is not marked as `@Entity`. This is because
+we don't traverse the hole object in look for entities because it will be time-consuming and inefficient. Because the developer
+should already know how the schema will be composed and know which properties might have entities, we created the `@HasEntity`
+decorator to tag these properties accordingly. This decorator works recursively, and it will look until no more entity related decorators are found.
+Think of this decorator of a hint to the package of how deep it should look to find an `@Entity`.
+
+```ts
+import { Entity, HasEntity } from "@schema-data-loader/core/decorators";
+import { Expose, Type } from "class-transformer";
+
+class Foo {
+  @Expose()
+  title!: string;
+  @Expose()
+  subtitle!: string;
+  
+  @Expose()
+  @Type(() => FooBar)
+  @HasEntity()
+  foobar: FooBar;
+}
+
+class FooBar {
+  @Expose()
+  description: string;
+  @Expose()
+  amount: number
+  @Expose()
+  @Type(() => Baz)
+  @Entity()
+  baz: Baz;
+}
+
+class Baz {
+  @Expose()
+  innerBaz: string;
 }
 ```
 
