@@ -26,7 +26,7 @@ interface ResolverParams {
 
 interface ConditionalResolverParams {
   entityDecoratorOptions?: EntityDecoratorOptions<unknown>;
-  meta: object;
+  meta?: object;
   parentData: object;
   dataAccessorName: string;
 }
@@ -52,7 +52,9 @@ export class EntityResolver<C> {
 
   async execute<T>({ path, data, target }: ResolveEntitiesAndDataParams<T, C>): Promise<Map<string, Entity>> {
     const targetEntities: Map<string, EntityDecoratorOptions<unknown>> | undefined = Reflect.getMetadata(ENTITY_KEY, target);
+
     if (!targetEntities) return this.entityMap;
+
     const targetExposedProps = defaultMetadataStorage.getExposedMetadatas(target);
     const exposedEntityProps = targetExposedProps.filter(({ propertyName }) => targetEntities.has(propertyName ?? ""));
     const incomingPath = `${path}${path?.length ? "." : ""}`;
@@ -61,7 +63,9 @@ export class EntityResolver<C> {
       const dataAccessorName = options.name || propertyName;
       if (!dataAccessorName) throw new Error("No data accessor property. Not possible to read entities from resolved data");
 
-      const dataResource: Array<DataResourceEntity> | DataResourceEntity = get(data, dataAccessorName);
+      const dataResource: Array<DataResourceEntity> | DataResourceEntity | undefined = get(data, dataAccessorName);
+
+      if (dataResource === undefined) continue;
 
       if (propertyName) {
         const { options, reflectedType, typeFunction } = defaultMetadataStorage.findTypeMetadata(target, propertyName);
@@ -70,6 +74,7 @@ export class EntityResolver<C> {
         let reflectTypeName = reflectedType?.name;
 
         const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
+
         const params: ResolverParams = {
           subTypes,
           type,
@@ -93,7 +98,7 @@ export class EntityResolver<C> {
             dataAccessorName
           });
           if (!shouldResolve) continue;
-          await this.objectTypeResolver(params, dataResource);
+          await this.objectTypeResolver(params, dataResource, entityDecoratorOptions?.parentEntityHolder ?? false);
         }
       }
     }
@@ -114,10 +119,20 @@ export class EntityResolver<C> {
     return true;
   }
 
-  private async objectTypeResolver({ incomingPath, type, subTypes, dataAccessorName }: ResolverParams, dataResource: DataResourceEntity) {
+  private async objectTypeResolver(
+    { incomingPath, type, subTypes, dataAccessorName }: ResolverParams,
+    dataResource: DataResourceEntity,
+    parentEntityHolder: boolean
+  ) {
     const entity = this.createEntity(dataResource);
     entity.path = `${incomingPath}${dataAccessorName}`;
-    entity.data = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
+
+    if (parentEntityHolder) {
+      entity.data = dataResource;
+    } else {
+      entity.data = await this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`);
+    }
+
     this.entityMap.set(entity.path, entity);
 
     if (!entity.data) throw new Error("Entity has no resolved data");
@@ -190,14 +205,20 @@ export class EntityResolver<C> {
       entity.path = `${incomingPath}${dataAccessor}`;
       this.entityMap.set(entity.path, entity);
 
-      resolveDataPromises.push(
-        this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`).then((data) => {
-          const retrievedEntity = this.entityMap.get(entity.path!);
-          if (!retrievedEntity) throw new Error("Error retrieving entity");
-          retrievedEntity.data = data;
-          return { type, entity: retrievedEntity };
-        })
-      );
+      if (entityDecoratorOptions?.parentEntityHolder) {
+        entity.data = resourceEntity;
+        const data = { type, entity };
+        resolveDataPromises.push(Promise.resolve(data));
+      } else {
+        resolveDataPromises.push(
+          this.httpClient.get(`/${entity.entityTypeId}/${entity.bundleId}/${entity.id}`).then((data) => {
+            const retrievedEntity = this.entityMap.get(entity.path!);
+            if (!retrievedEntity) throw new Error("Error retrieving entity");
+            retrievedEntity.data = data;
+            return { type, entity: retrievedEntity };
+          })
+        );
+      }
     }
 
     const resolvedData = await Promise.all(resolveDataPromises);
