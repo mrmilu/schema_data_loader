@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.2.1](https://github.com/mrmilu/schema_data_loader/compare/core@v0.2.0...core@v0.2.1) (2023-11-27)
+
+
+### Bug Fixes
+
+* **core:** simplified array entity request and solved order bug ([7c4f996](https://github.com/mrmilu/schema_data_loader/commit/7c4f996277b0b30585b5fe447c0ba990717a5265))
+
 ## [0.2.0](https://github.com/mrmilu/schema_data_loader/compare/core@v0.1.0...core@v0.2.0) (2023-10-18)
 
 
