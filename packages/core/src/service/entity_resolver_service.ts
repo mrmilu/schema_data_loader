@@ -26,7 +26,7 @@ export class EntityResolverService implements IEntityResolverService {
   }
 
   private rebuildResolvedData(entityMap: Map<string, Entity>, data: object): object | null {
-    let rebuiltData: object | null = null;
+    let rebuiltData: object = structuredClone(data);
     for (const entity of entityMap.values()) {
       rebuiltData = set(data, entity.path, { ...entity.data, _meta: entity.meta });
     }

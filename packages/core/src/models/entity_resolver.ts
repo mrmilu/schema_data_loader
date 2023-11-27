@@ -65,7 +65,12 @@ export class EntityResolver<C> {
 
       const dataResource: Array<DataResourceEntity> | DataResourceEntity | undefined = get(data, dataAccessorName);
 
-      if (dataResource === undefined) continue;
+      if (
+        dataResource === undefined ||
+        (!Array.isArray(dataResource) && !dataResource.type && !dataResource.id) ||
+        (Array.isArray(dataResource) && !dataResource.length)
+      )
+        continue;
 
       if (propertyName) {
         const { options, reflectedType, typeFunction } = defaultMetadataStorage.findTypeMetadata(target, propertyName);
