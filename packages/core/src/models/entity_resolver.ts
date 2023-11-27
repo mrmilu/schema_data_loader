@@ -8,7 +8,6 @@ import { Entity } from "./entity";
 import { defaultMetadataStorage } from "class-transformer/cjs/storage.js";
 import get from "lodash/get";
 import set from "lodash/set";
-import { notEmpty } from "../utils/array";
 
 interface ResolveEntitiesAndDataParams<T, C> {
   target: ClassConstructor<T>;
@@ -32,7 +31,7 @@ interface ConditionalResolverParams {
 }
 
 interface ArrayEntityRequestParams {
-  typesList: Array<ClassConstructor<unknown>>;
+  typeOrTypes: Array<ClassTransformerSubType> | ClassConstructor<unknown>;
   dataResourceList: Array<DataResourceEntity>;
   incomingPath: string;
   dataAccessorName: string;
@@ -75,13 +74,6 @@ export class EntityResolver<C> {
 
         const entityDecoratorOptions = targetEntities.get(propertyName ?? "");
 
-        const params: ResolverParams = {
-          subTypes,
-          type,
-          incomingPath,
-          dataAccessorName
-        };
-
         if (!reflectTypeName) {
           reflectTypeName = typeFunction().constructor.name;
         } else if (reflectTypeName !== "Object" && reflectTypeName !== "Array") {
@@ -89,7 +81,28 @@ export class EntityResolver<C> {
         }
 
         if (reflectTypeName === "Array" && Array.isArray(dataResource)) {
-          await this.arrayTypeResolver(params, dataResource, data, entityDecoratorOptions);
+          const baseParams: Omit<ArrayEntityRequestParams, "typeOrTypes" | "dataResourceList"> = {
+            incomingPath,
+            dataAccessorName,
+            entityDecoratorOptions,
+            parentData: data
+          };
+
+          if (subTypes) {
+            const dataResourceList = dataResource.filter((resourceEntity) => subTypes.find((type) => type.name === resourceEntity.type)?.value);
+
+            await this.arrayEntityRequest({
+              typeOrTypes: subTypes,
+              dataResourceList,
+              ...baseParams
+            });
+          } else {
+            await this.arrayEntityRequest({
+              typeOrTypes: type,
+              dataResourceList: dataResource,
+              ...baseParams
+            });
+          }
         } else if ((reflectTypeName === "Object" || reflectTypeName === "Function") && !Array.isArray(dataResource)) {
           const shouldResolve = await this.conditionalResolver({
             entityDecoratorOptions,
@@ -98,6 +111,12 @@ export class EntityResolver<C> {
             dataAccessorName
           });
           if (!shouldResolve) continue;
+          const params: ResolverParams = {
+            subTypes,
+            type,
+            incomingPath,
+            dataAccessorName
+          };
           await this.objectTypeResolver(params, dataResource, entityDecoratorOptions?.parentEntityHolder ?? false);
         }
       }
@@ -150,38 +169,8 @@ export class EntityResolver<C> {
     }
   }
 
-  private async arrayTypeResolver(
-    { dataAccessorName, type, subTypes, incomingPath }: ResolverParams,
-    dataResource: Array<DataResourceEntity>,
-    parentData: object,
-    entityDecoratorOptions?: EntityDecoratorOptions<unknown>
-  ) {
-    const baseParams: Omit<ArrayEntityRequestParams, "typesList"> = {
-      dataResourceList: dataResource,
-      incomingPath,
-      dataAccessorName,
-      entityDecoratorOptions,
-      parentData
-    };
-    if (subTypes) {
-      const orderedSubTypes = dataResource
-        .map((resourceEntity) => subTypes.find((type) => type.name === resourceEntity.type)?.value)
-        .filter(notEmpty);
-      await this.arrayEntityRequest({
-        typesList: orderedSubTypes,
-        ...baseParams
-      });
-    } else {
-      const mappedTypes = dataResource.map(() => type);
-      await this.arrayEntityRequest({
-        typesList: mappedTypes,
-        ...baseParams
-      });
-    }
-  }
-
   private async arrayEntityRequest({
-    typesList,
+    typeOrTypes,
     dataResourceList,
     incomingPath,
     dataAccessorName,
@@ -189,8 +178,16 @@ export class EntityResolver<C> {
     parentData
   }: ArrayEntityRequestParams): Promise<void> {
     const resolveDataPromises: Array<Promise<{ type: ClassConstructor<unknown>; entity: Entity }>> = [];
-    for (const [idx, type] of typesList.entries()) {
-      const resourceEntity = dataResourceList[idx];
+    for (const [idx, resourceEntity] of dataResourceList.entries()) {
+      let type: ClassConstructor<unknown> | undefined;
+      if (Array.isArray(typeOrTypes)) {
+        type = typeOrTypes.find((subType) => subType.name === resourceEntity.type)?.value;
+      } else {
+        type = typeOrTypes;
+      }
+      if (!type) {
+        throw new Error("Type for resource entity was not found");
+      }
       const dataAccessor = `${dataAccessorName}[${idx}]`;
 
       const shouldResolve = await this.conditionalResolver({
@@ -215,7 +212,7 @@ export class EntityResolver<C> {
             const retrievedEntity = this.entityMap.get(entity.path!);
             if (!retrievedEntity) throw new Error("Error retrieving entity");
             retrievedEntity.data = data;
-            return { type, entity: retrievedEntity };
+            return { type: type as ClassConstructor<unknown>, entity: retrievedEntity };
           })
         );
       }
