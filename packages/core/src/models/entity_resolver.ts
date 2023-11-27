@@ -169,33 +169,6 @@ export class EntityResolver<C> {
     }
   }
 
-  // TODO remove
-  private async arrayTypeResolver(
-    { dataAccessorName, type, subTypes, incomingPath }: ResolverParams,
-    dataResource: Array<DataResourceEntity>,
-    parentData: object,
-    entityDecoratorOptions?: EntityDecoratorOptions<unknown>
-  ) {
-    const baseParams: Omit<ArrayEntityRequestParams, "typeOrTypes"> = {
-      dataResourceList: dataResource,
-      incomingPath,
-      dataAccessorName,
-      entityDecoratorOptions,
-      parentData
-    };
-    if (subTypes) {
-      await this.arrayEntityRequest({
-        typeOrTypes: subTypes,
-        ...baseParams
-      });
-    } else {
-      await this.arrayEntityRequest({
-        typeOrTypes: type,
-        ...baseParams
-      });
-    }
-  }
-
   private async arrayEntityRequest({
     typeOrTypes,
     dataResourceList,
