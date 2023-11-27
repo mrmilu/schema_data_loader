@@ -87,7 +87,6 @@ export class EntityResolver<C> {
             entityDecoratorOptions,
             parentData: data
           };
-          debugger;
 
           if (subTypes) {
             const dataResourceList = dataResource.filter((resourceEntity) => subTypes.find((type) => type.name === resourceEntity.type)?.value);
@@ -230,7 +229,6 @@ export class EntityResolver<C> {
       entity.path = `${incomingPath}${dataAccessor}`;
       this.entityMap.set(entity.path, entity);
 
-      debugger;
       if (entityDecoratorOptions?.parentEntityHolder) {
         entity.data = resourceEntity;
         const data = { type, entity };
