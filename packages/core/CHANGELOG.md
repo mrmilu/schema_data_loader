@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.2.2](https://github.com/mrmilu/schema_data_loader/compare/core@v0.2.1...core@v0.2.2) (2023-11-27)
+
+
+### Bug Fixes
+
+* **core:** checking data resource has type & id.Cloning data & assigning to 1st val when rebuilding ([a7e1716](https://github.com/mrmilu/schema_data_loader/commit/a7e1716dcbddd9f00039e36f6ef541acc2ec97d4))
+
 ## [0.2.1](https://github.com/mrmilu/schema_data_loader/compare/core@v0.2.0...core@v0.2.1) (2023-11-27)
 
 
